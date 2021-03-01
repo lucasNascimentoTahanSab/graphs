@@ -63,9 +63,8 @@ void mostrarRelacoes(struct Vertice *);
  * Metodos de funcionalidades 
  * auxiliares.
  */
-int selecionarOpcao();
+char selecionarOpcao();
 char obterIdentificadorVertice();
-void limparEntrada();
 
 int main(int argc, char const *argv[])
 {
@@ -88,31 +87,49 @@ void inicializarVariaveis()
 
 void apresentarOpcoes()
 {
-  int opcaoEscolhida;
+  char opcaoEscolhida;
   do
   {
     opcaoEscolhida = selecionarOpcao();
     switch (opcaoEscolhida)
     {
-    case 0:
-      inserirVertice(obterIdentificadorVertice());
+    case '0':
+    {
+      char identificador = obterIdentificadorVertice();
+      if (identificador != -1)
+        inserirVertice(identificador);
       break;
-    case 1:
-      removerVertice(obterIdentificadorVertice());
+    }
+    case '1':
+    {
+      char identificador = obterIdentificadorVertice();
+      if (identificador != -1)
+        removerVertice(identificador);
       break;
-    case 2:
-      inserirAresta(obterIdentificadorVertice(), obterIdentificadorVertice());
+    }
+    case '2':
+    {
+      char primeiroIdentificador = obterIdentificadorVertice();
+      char segundoIdentificador = obterIdentificadorVertice();
+      if (primeiroIdentificador != -1 && segundoIdentificador != -1)
+        inserirAresta(primeiroIdentificador, segundoIdentificador);
       break;
-    case 3:
-      removerAresta(obterIdentificadorVertice(), obterIdentificadorVertice());
+    }
+    case '3':
+    {
+      char primeiroIdentificador = obterIdentificadorVertice();
+      char segundoIdentificador = obterIdentificadorVertice();
+      if (primeiroIdentificador != -1 && segundoIdentificador != -1)
+        removerAresta(primeiroIdentificador, segundoIdentificador);
       break;
-    case 4:
+    }
+    case '4':
       mostrarVerticesERelacoes();
       break;
     default:
       break;
     }
-  } while (opcaoEscolhida != 5);
+  } while (opcaoEscolhida != '5');
 }
 
 void inserirVertice(char identificador)
@@ -279,9 +296,9 @@ void mostrarRelacoes(struct Vertice *vertice)
   }
 }
 
-int selecionarOpcao()
+char selecionarOpcao()
 {
-  int opcaoEscolhida;
+  char *opcaoEscolhida = (char *)malloc(3 * sizeof(char *));
   printf("\n");
   printf("Escolha a opcao desejada:\n");
   printf("0 - Inserir vertice\n");
@@ -291,30 +308,17 @@ int selecionarOpcao()
   printf("4 - Apresentar vertices e relacoes\n");
   printf("5 - Sair\n");
   printf("\n");
-  scanf("%d", &opcaoEscolhida);
+  fgets(opcaoEscolhida, 3, stdin);
   printf("\n");
-  limparEntrada();
 
-  return opcaoEscolhida;
+  return (int)opcaoEscolhida[0];
 }
 
 char obterIdentificadorVertice()
 {
-  char identificador;
+  char *identificador = (char *)malloc(3 * sizeof(char *));
   printf("Insira um identificador de 1 caractere para o vertice: ");
-  scanf("%c", &identificador);
-  limparEntrada();
+  fgets(identificador, 3, stdin);
 
-  return identificador;
-}
-
-/**
- * Metodo de controle para evitar
- * captura da tecla enter ao inserir
- * um novo valor. 
- */
-void limparEntrada()
-{
-  char entrada;
-  scanf("%c", &entrada);
+  return identificador[0] >= 33 && identificador[0] <= 126 ? identificador[0] : -1;
 }
