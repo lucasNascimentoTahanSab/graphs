@@ -3,6 +3,9 @@
 
 int const VERTICES_TOTAIS = 10;
 int const VERTICE_INICIAL = 0;
+int const ARESTA_INICIAL = 0;
+
+#define ARESTAS_TOTAIS (VERTICES_TOTAIS - 1)
 
 /**
  * Estruturas responsaveis pela modelagem do 
@@ -155,6 +158,7 @@ void removerVertice(char identificador)
       removerArestasDoVertice(grafo->vertices[i]);
       for (int j = i; j < VERTICES_TOTAIS - 1; j++)
         grafo->vertices[j] = grafo->vertices[j + 1];
+      grafo->vertices[VERTICES_TOTAIS - 1] = NULL;
       break;
     }
   }
@@ -215,14 +219,14 @@ int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice
 
 void inicializarVertices(struct Vertice *vertice)
 {
-  vertice->vertices = (struct Vertice **)malloc(VERTICES_TOTAIS * sizeof(struct Vertice **));
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  vertice->vertices = (struct Vertice **)malloc(((int)ARESTAS_TOTAIS) * sizeof(struct Vertice **));
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
     vertice->vertices[i] = NULL;
 }
 
 int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Vertice **verticesAssociados)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (verticesAssociados[i] == verticePesquisado)
       return 1;
@@ -239,7 +243,7 @@ void removerArestasDoVertice(struct Vertice *vertice)
 
 void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (primeiroVertice->vertices[i] == NULL)
     {
@@ -251,18 +255,13 @@ void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVe
 
 void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (primeiroVertice->vertices[i]->identificador == segundoVertice->identificador)
     {
-      if (i == VERTICES_TOTAIS - 1)
-        primeiroVertice->vertices[i] = NULL;
-      else
-      {
-        for (int j = i; j < VERTICES_TOTAIS - 1; j++)
-          primeiroVertice->vertices[j] = primeiroVertice->vertices[j + 1];
-      }
-
+      for (int j = i; j < ((int)ARESTAS_TOTAIS) - 1; j++)
+        primeiroVertice->vertices[j] = primeiroVertice->vertices[j + 1];
+      primeiroVertice->vertices[((int)ARESTAS_TOTAIS) - 1] = NULL;
       break;
     }
   }
@@ -271,7 +270,7 @@ void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segund
 void mostrarRelacoes(struct Vertice *vertice)
 {
   struct Vertice **relacoes = vertice->vertices;
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (relacoes[i] != NULL)
       printf("%c ", relacoes[i]->identificador);
