@@ -4,6 +4,7 @@
 int const VERTICES_TOTAIS = 10;
 int const VERTICE_INICIAL = 0;
 int const ARESTA_INICIAL = 0;
+int const BUFFER_MAX = 10;
 
 #define ARESTAS_TOTAIS (VERTICES_TOTAIS - 1)
 
@@ -298,7 +299,7 @@ void mostrarRelacoes(struct Vertice *vertice)
 
 char selecionarOpcao()
 {
-  char *opcaoEscolhida = (char *)malloc(3 * sizeof(char *));
+  char *opcaoEscolhida = (char *)malloc(BUFFER_MAX * sizeof(char *));
   printf("\n");
   printf("Escolha a opcao desejada:\n");
   printf("0 - Inserir vertice\n");
@@ -308,17 +309,17 @@ char selecionarOpcao()
   printf("4 - Apresentar vertices e relacoes\n");
   printf("5 - Sair\n");
   printf("\n");
-  fgets(opcaoEscolhida, 3, stdin);
+  fgets(opcaoEscolhida, BUFFER_MAX, stdin);
   printf("\n");
 
-  return (int)opcaoEscolhida[0];
+  return opcaoEscolhida[0];
 }
 
 char obterIdentificadorVertice()
 {
-  char *identificador = (char *)malloc(3 * sizeof(char *));
+  char *identificador = (char *)malloc(BUFFER_MAX * sizeof(char *));
   printf("Insira um identificador de 1 caractere para o vertice: ");
-  fgets(identificador, 3, stdin);
+  fgets(identificador, BUFFER_MAX, stdin);
 
   return identificador[0] >= 33 && identificador[0] <= 126 ? identificador[0] : -1;
 }
