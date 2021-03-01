@@ -50,12 +50,12 @@ struct Vertice *obterVertice(char);
 int existeVertice(char);
 int existeAresta(struct Vertice *, struct Vertice *);
 void inicializarVertices(struct Vertice *);
-int existeVerticeEmVertices(struct Vertice *, struct Vertice **);
+int verticeEstaAssociado(struct Vertice *, struct Vertice **);
 void removerArestasOriginadasNoVertice(struct Vertice *);
 void removerArestasIncidentesNoVertice(char);
 void vincularVertices(struct Vertice *, struct Vertice *);
 void desvincularVertices(struct Vertice *, struct Vertice *);
-void mostrarRelacoes(struct Vertice **);
+void mostrarRelacoes(struct Vertice *);
 
 /**
  * Metodos de funcionalidades 
@@ -186,7 +186,7 @@ void mostrarVerticesERelacoes()
     if (grafo->vertices[i] != NULL)
     {
       printf("%c aponta para: ", grafo->vertices[i]->identificador);
-      mostrarRelacoes(grafo->vertices[i]->vertices);
+      mostrarRelacoes(grafo->vertices[i]);
     }
     else
       break;
@@ -210,10 +210,7 @@ struct Vertice *obterVertice(char identificador)
 
 int existeVertice(char identificador)
 {
-  if (obterVertice(identificador) != NULL)
-    return 1;
-  else
-    return 0;
+  return obterVertice(identificador) != NULL;
 }
 
 int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
@@ -221,7 +218,7 @@ int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice
   if (primeiroVertice->vertices == NULL)
     return 0;
 
-  return existeVerticeEmVertices(segundoVertice, primeiroVertice->vertices);
+  return verticeEstaAssociado(segundoVertice, primeiroVertice->vertices);
 }
 
 void inicializarVertices(struct Vertice *vertice)
@@ -231,11 +228,11 @@ void inicializarVertices(struct Vertice *vertice)
     vertice->vertices[i] = NULL;
 }
 
-int existeVerticeEmVertices(struct Vertice *verticePesquisado, struct Vertice **vertices)
+int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Vertice **verticesAssociados)
 {
   for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
   {
-    if (vertices[i] == verticePesquisado)
+    if (verticesAssociados[i] == verticePesquisado)
       return 1;
   }
 
@@ -290,12 +287,13 @@ void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segund
   }
 }
 
-void mostrarRelacoes(struct Vertice **vertices)
+void mostrarRelacoes(struct Vertice *vertice)
 {
+  struct Vertice **relacoes = vertice->vertices;
   for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
   {
-    if (vertices[i] != NULL)
-      printf("%c ", vertices[i]->identificador);
+    if (relacoes[i] != NULL)
+      printf("%c ", relacoes[i]->identificador);
     else
       break;
   }
