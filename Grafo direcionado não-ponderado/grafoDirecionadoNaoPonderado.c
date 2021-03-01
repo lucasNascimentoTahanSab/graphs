@@ -3,6 +3,9 @@
 
 int const VERTICES_TOTAIS = 10;
 int const VERTICE_INICIAL = 0;
+int const ARESTA_INICIAL = 0;
+
+#define ARESTAS_TOTAIS (VERTICES_TOTAIS - 1)
 
 /**
  * Estruturas responsaveis pela modelagem do 
@@ -61,9 +64,8 @@ void mostrarRelacoes(struct Vertice *);
  * Metodos de funcionalidades 
  * auxiliares.
  */
-int selecionarOpcao();
+char selecionarOpcao();
 char obterIdentificadorVertice();
-void limparEntrada();
 
 int main(int argc, char const *argv[])
 {
@@ -86,39 +88,49 @@ void inicializarVariaveis()
 
 void apresentarOpcoes()
 {
-  int opcaoEscolhida;
+  char opcaoEscolhida;
   do
   {
     opcaoEscolhida = selecionarOpcao();
     switch (opcaoEscolhida)
     {
-    case 0:
-      inserirVertice(obterIdentificadorVertice());
+    case '0':
+    {
+      char identificador = obterIdentificadorVertice();
+      if (identificador != -1)
+        inserirVertice(identificador);
       break;
-    case 1:
-      removerVertice(obterIdentificadorVertice());
+    }
+    case '1':
+    {
+      char identificador = obterIdentificadorVertice();
+      if (identificador != -1)
+        removerVertice(identificador);
       break;
-    case 2:
+    }
+    case '2':
     {
       char primeiroIdentificador = obterIdentificadorVertice();
       char segundoIdentificador = obterIdentificadorVertice();
-      inserirAresta(primeiroIdentificador, segundoIdentificador);
+      if (primeiroIdentificador != -1 && segundoIdentificador != -1)
+        inserirAresta(primeiroIdentificador, segundoIdentificador);
       break;
     }
-    case 3:
+    case '3':
     {
       char primeiroIdentificador = obterIdentificadorVertice();
       char segundoIdentificador = obterIdentificadorVertice();
-      removerAresta(primeiroIdentificador, segundoIdentificador);
+      if (primeiroIdentificador != -1 && segundoIdentificador != -1)
+        removerAresta(primeiroIdentificador, segundoIdentificador);
       break;
     }
-    case 4:
+    case '4':
       mostrarVerticesERelacoes();
       break;
     default:
       break;
     }
-  } while (opcaoEscolhida != 5);
+  } while (opcaoEscolhida != '5');
 }
 
 void inserirVertice(char identificador)
@@ -164,6 +176,7 @@ void removerVertice(char identificador)
       removerArestasIncidentesNoVertice(identificador);
       for (int j = i; j < VERTICES_TOTAIS - 1; j++)
         grafo->vertices[j] = grafo->vertices[j + 1];
+      grafo->vertices[VERTICES_TOTAIS - 1] = NULL;
       break;
     }
   }
@@ -173,7 +186,7 @@ void removerAresta(char primeiroIdentificador, char segundoIdentificador)
 {
   struct Vertice *primeiroVertice = obterVertice(primeiroIdentificador);
   struct Vertice *segundoVertice = obterVertice(segundoIdentificador);
-  if (existeAresta(primeiroVertice, segundoVertice) && (primeiroVertice != NULL && segundoVertice != NULL))
+  if ((primeiroVertice != NULL && segundoVertice != NULL) && existeAresta(primeiroVertice, segundoVertice))
   {
     desvincularVertices(primeiroVertice, segundoVertice);
   }
@@ -223,14 +236,14 @@ int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice
 
 void inicializarVertices(struct Vertice *vertice)
 {
-  vertice->vertices = (struct Vertice **)malloc(VERTICES_TOTAIS * sizeof(struct Vertice **));
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  vertice->vertices = (struct Vertice **)malloc(((int)ARESTAS_TOTAIS) * sizeof(struct Vertice **));
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
     vertice->vertices[i] = NULL;
 }
 
 int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Vertice **verticesAssociados)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (verticesAssociados[i] == verticePesquisado)
       return 1;
@@ -258,7 +271,7 @@ void removerArestasIncidentesNoVertice(char identificador)
 
 void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (primeiroVertice->vertices[i] == NULL)
     {
@@ -270,18 +283,13 @@ void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVe
 
 void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (primeiroVertice->vertices[i]->identificador == segundoVertice->identificador)
     {
-      if (i == VERTICES_TOTAIS - 1)
-        primeiroVertice->vertices[i] = NULL;
-      else
-      {
-        for (int j = i; j < VERTICES_TOTAIS - 1; j++)
-          primeiroVertice->vertices[j] = primeiroVertice->vertices[j + 1];
-      }
-
+      for (int j = i; j < ((int)ARESTAS_TOTAIS) - 1; j++)
+        primeiroVertice->vertices[j] = primeiroVertice->vertices[j + 1];
+      primeiroVertice->vertices[((int)ARESTAS_TOTAIS) - 1] = NULL;
       break;
     }
   }
@@ -290,7 +298,7 @@ void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segund
 void mostrarRelacoes(struct Vertice *vertice)
 {
   struct Vertice **relacoes = vertice->vertices;
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (relacoes[i] != NULL)
       printf("%c ", relacoes[i]->identificador);
@@ -299,9 +307,9 @@ void mostrarRelacoes(struct Vertice *vertice)
   }
 }
 
-int selecionarOpcao()
+char selecionarOpcao()
 {
-  int opcaoEscolhida;
+  char *opcaoEscolhida = (char *)malloc(3 * sizeof(char *));
   printf("\n");
   printf("Escolha a opcao desejada:\n");
   printf("0 - Inserir vertice\n");
@@ -311,25 +319,17 @@ int selecionarOpcao()
   printf("4 - Apresentar vertices e relacoes\n");
   printf("5 - Sair\n");
   printf("\n");
-  scanf("%d", &opcaoEscolhida);
+  fgets(opcaoEscolhida, 3, stdin);
   printf("\n");
-  limparEntrada();
 
-  return opcaoEscolhida;
+  return (int)opcaoEscolhida[0];
 }
 
 char obterIdentificadorVertice()
 {
-  char identificador;
+  char *identificador = (char *)malloc(3 * sizeof(char *));
   printf("Insira um identificador de 1 caractere para o vertice: ");
-  scanf("%c", &identificador);
-  limparEntrada();
+  fgets(identificador, 3, stdin);
 
-  return identificador;
-}
-
-void limparEntrada()
-{
-  char entrada;
-  scanf("%c", &entrada);
+  return identificador[0] >= 33 && identificador[0] <= 126 ? identificador[0] : -1;
 }

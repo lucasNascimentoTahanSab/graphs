@@ -58,7 +58,7 @@ struct Vertice *obterVertice(char);
 int existeVertice(char);
 int existeAresta(struct Vertice *, struct Vertice *);
 void inicializarArestas(struct Vertice *);
-int existeVerticeEmArestas(struct Vertice *, struct Aresta **);
+int verticeEstaAssociado(struct Vertice *, struct Aresta **);
 void removerArestasDoVertice(struct Vertice *);
 void vincularVertices(struct Vertice *, struct Vertice *, double);
 void desvincularVertices(struct Vertice *, struct Vertice *);
@@ -162,6 +162,7 @@ void removerVertice(char identificador)
     if (grafo->vertices[i]->identificador == identificador)
     {
       removerArestasDoVertice(grafo->vertices[i]);
+      grafo->vertices[i] = NULL;
       for (int j = i; j < VERTICES_TOTAIS - 1; j++)
         grafo->vertices[j] = grafo->vertices[j + 1];
       break;
@@ -211,10 +212,7 @@ struct Vertice *obterVertice(char identificador)
 
 int existeVertice(char identificador)
 {
-  if (obterVertice(identificador) != NULL)
-    return 1;
-  else
-    return 0;
+  return obterVertice(identificador) != NULL;
 }
 
 int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
@@ -222,7 +220,7 @@ int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice
   if (primeiroVertice->arestas == NULL || segundoVertice->arestas == NULL)
     return 0;
 
-  return existeVerticeEmArestas(segundoVertice, primeiroVertice->arestas);
+  return verticeEstaAssociado(segundoVertice, primeiroVertice->arestas);
 }
 
 void inicializarArestas(struct Vertice *vertice)
@@ -232,7 +230,7 @@ void inicializarArestas(struct Vertice *vertice)
     vertice->arestas[i] = NULL;
 }
 
-int existeVerticeEmArestas(struct Vertice *verticePesquisado, struct Aresta **arestas)
+int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Aresta **arestas)
 {
   for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
   {
@@ -271,14 +269,9 @@ void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segund
   {
     if (primeiroVertice->arestas[i] != NULL && primeiroVertice->arestas[i]->vertice == segundoVertice)
     {
-      if (i == VERTICES_TOTAIS - 1)
-        primeiroVertice->arestas[i] = NULL;
-      else
-      {
-        for (int j = i; j < VERTICES_TOTAIS - 1; j++)
-          primeiroVertice->arestas[j] = primeiroVertice->arestas[j + 1];
-      }
-
+      primeiroVertice->arestas[i] = NULL;
+      for (int j = i; j < VERTICES_TOTAIS - 1; j++)
+        primeiroVertice->arestas[j] = primeiroVertice->arestas[j + 1];
       break;
     }
   }
