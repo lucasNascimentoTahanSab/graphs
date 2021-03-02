@@ -3,6 +3,10 @@
 
 int const VERTICES_TOTAIS = 10;
 int const VERTICE_INICIAL = 0;
+int const ARESTA_INICIAL = 0;
+int const BUFFER_MAX = 10;
+
+#define ARESTAS_TOTAIS (VERTICES_TOTAIS - 1)
 
 /**
  * Estruturas responsaveis pela modelagem do 
@@ -58,20 +62,20 @@ struct Vertice *obterVertice(char);
 int existeVertice(char);
 int existeAresta(struct Vertice *, struct Vertice *);
 void inicializarArestas(struct Vertice *);
-int existeVerticeEmArestas(struct Vertice *, struct Aresta **);
-void removerArestasDoVertice(struct Vertice *);
+int verticeEstaAssociado(struct Vertice *, struct Aresta **);
+void removerArestasOriginadasNoVertice(struct Vertice *);
+void removerArestasIncidentesNoVertice(char);
 void vincularVertices(struct Vertice *, struct Vertice *, double);
 void desvincularVertices(struct Vertice *, struct Vertice *);
-void mostrarRelacoes(struct Aresta **);
+void mostrarRelacoes(struct Vertice *);
 
 /**
  * Metodos de funcionalidades 
  * auxiliares.
  */
-int selecionarOpcao();
+char selecionarOpcao();
 char obterIdentificadorVertice();
 double obterPesoAresta();
-void limparEntrada();
 
 int main(int argc, char const *argv[])
 {
@@ -94,31 +98,50 @@ void inicializarVariaveis()
 
 void apresentarOpcoes()
 {
-  int opcaoEscolhida;
+  char opcaoEscolhida;
   do
   {
     opcaoEscolhida = selecionarOpcao();
     switch (opcaoEscolhida)
     {
-    case 0:
-      inserirVertice(obterIdentificadorVertice());
+    case '0':
+    {
+      char identificador = obterIdentificadorVertice();
+      if (identificador != -1)
+        inserirVertice(identificador);
       break;
-    case 1:
-      removerVertice(obterIdentificadorVertice());
+    }
+    case '1':
+    {
+      char identificador = obterIdentificadorVertice();
+      if (identificador != -1)
+        removerVertice(identificador);
       break;
-    case 2:
-      inserirAresta(obterIdentificadorVertice(), obterIdentificadorVertice(), obterPesoAresta());
+    }
+    case '2':
+    {
+      double peso = obterPesoAresta();
+      char primeiroIdentificador = obterIdentificadorVertice();
+      char segundoIdentificador = obterIdentificadorVertice();
+      if (primeiroIdentificador != -1 && segundoIdentificador != -1)
+        inserirAresta(primeiroIdentificador, segundoIdentificador, peso);
       break;
-    case 3:
-      removerAresta(obterIdentificadorVertice(), obterIdentificadorVertice());
+    }
+    case '3':
+    {
+      char primeiroIdentificador = obterIdentificadorVertice();
+      char segundoIdentificador = obterIdentificadorVertice();
+      if (primeiroIdentificador != -1 && segundoIdentificador != -1)
+        removerAresta(primeiroIdentificador, segundoIdentificador);
       break;
-    case 4:
+    }
+    case '4':
       mostrarVerticesERelacoes();
       break;
     default:
       break;
     }
-  } while (opcaoEscolhida != 5);
+  } while (opcaoEscolhida != '5');
 }
 
 void inserirVertice(char identificador)
@@ -148,7 +171,6 @@ void inserirAresta(char primeiroIdentificador, char segundoIdentificador, double
   if ((primeiroVertice != NULL && segundoVertice != NULL) && !existeAresta(primeiroVertice, segundoVertice))
   {
     vincularVertices(primeiroVertice, segundoVertice, peso);
-    vincularVertices(segundoVertice, primeiroVertice, peso);
   }
 }
 
@@ -161,9 +183,11 @@ void removerVertice(char identificador)
   {
     if (grafo->vertices[i]->identificador == identificador)
     {
-      removerArestasDoVertice(grafo->vertices[i]);
+      removerArestasOriginadasNoVertice(grafo->vertices[i]);
+      removerArestasIncidentesNoVertice(identificador);
       for (int j = i; j < VERTICES_TOTAIS - 1; j++)
         grafo->vertices[j] = grafo->vertices[j + 1];
+      grafo->vertices[VERTICES_TOTAIS - 1] = NULL;
       break;
     }
   }
@@ -176,7 +200,6 @@ void removerAresta(char primeiroIdentificador, char segundoIdentificador)
   if ((primeiroVertice != NULL && segundoVertice != NULL) && existeAresta(primeiroVertice, segundoVertice))
   {
     desvincularVertices(primeiroVertice, segundoVertice);
-    desvincularVertices(segundoVertice, primeiroVertice);
   }
 }
 
@@ -186,8 +209,8 @@ void mostrarVerticesERelacoes()
   {
     if (grafo->vertices[i] != NULL)
     {
-      printf("%c possui relacao com: ", grafo->vertices[i]->identificador);
-      mostrarRelacoes(grafo->vertices[i]->arestas);
+      printf("%c aponta para: ", grafo->vertices[i]->identificador);
+      mostrarRelacoes(grafo->vertices[i]);
     }
     else
       break;
@@ -211,10 +234,7 @@ struct Vertice *obterVertice(char identificador)
 
 int existeVertice(char identificador)
 {
-  if (obterVertice(identificador) != NULL)
-    return 1;
-  else
-    return 0;
+  return obterVertice(identificador) != NULL;
 }
 
 int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
@@ -222,19 +242,19 @@ int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice
   if (primeiroVertice->arestas == NULL || segundoVertice->arestas == NULL)
     return 0;
 
-  return existeVerticeEmArestas(segundoVertice, primeiroVertice->arestas);
+  return verticeEstaAssociado(segundoVertice, primeiroVertice->arestas);
 }
 
 void inicializarArestas(struct Vertice *vertice)
 {
-  vertice->arestas = (struct Aresta **)malloc(VERTICES_TOTAIS * sizeof(struct Aresta **));
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  vertice->arestas = (struct Aresta **)malloc(((int)ARESTAS_TOTAIS) * sizeof(struct Aresta **));
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
     vertice->arestas[i] = NULL;
 }
 
-int existeVerticeEmArestas(struct Vertice *verticePesquisado, struct Aresta **arestas)
+int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Aresta **arestas)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (arestas[i] != NULL && arestas[i]->vertice == verticePesquisado)
       return 1;
@@ -243,10 +263,21 @@ int existeVerticeEmArestas(struct Vertice *verticePesquisado, struct Aresta **ar
   return 0;
 }
 
-void removerArestasDoVertice(struct Vertice *vertice)
+void removerArestasOriginadasNoVertice(struct Vertice *vertice)
 {
   for (struct Aresta *i = vertice->arestas[0]; i != NULL; i = vertice->arestas[0])
     removerAresta(vertice->identificador, i->vertice->identificador);
+}
+
+void removerArestasIncidentesNoVertice(char identificador)
+{
+  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  {
+    if (grafo->vertices[i] != NULL)
+      removerAresta(grafo->vertices[i]->identificador, identificador);
+    else
+      break;
+  }
 }
 
 void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVertice, double peso)
@@ -255,10 +286,11 @@ void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVe
   aresta->vertice = segundoVertice;
   aresta->peso = peso;
 
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (primeiroVertice->arestas[i] == NULL)
     {
+      primeiroVertice->arestas[i] = (struct Aresta *)malloc(sizeof(struct Aresta *));
       primeiroVertice->arestas[i] = aresta;
       break;
     }
@@ -267,26 +299,22 @@ void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVe
 
 void desvincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (primeiroVertice->arestas[i] != NULL && primeiroVertice->arestas[i]->vertice == segundoVertice)
     {
-      if (i == VERTICES_TOTAIS - 1)
-        primeiroVertice->arestas[i] = NULL;
-      else
-      {
-        for (int j = i; j < VERTICES_TOTAIS - 1; j++)
-          primeiroVertice->arestas[j] = primeiroVertice->arestas[j + 1];
-      }
-
+      for (int j = i; j < ((int)ARESTAS_TOTAIS) - 1; j++)
+        primeiroVertice->arestas[j] = primeiroVertice->arestas[j + 1];
+      primeiroVertice->arestas[((int)ARESTAS_TOTAIS) - 1] = NULL;
       break;
     }
   }
 }
 
-void mostrarRelacoes(struct Aresta **arestas)
+void mostrarRelacoes(struct Vertice *vertice)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  struct Aresta **arestas = vertice->arestas;
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (arestas[i] != NULL)
       printf("%c(%.2lf) ", arestas[i]->vertice->identificador, arestas[i]->peso);
@@ -295,9 +323,9 @@ void mostrarRelacoes(struct Aresta **arestas)
   }
 }
 
-int selecionarOpcao()
+char selecionarOpcao()
 {
-  int opcaoEscolhida;
+  char *opcaoEscolhida = (char *)malloc(BUFFER_MAX * sizeof(char *));
   printf("\n");
   printf("Escolha a opcao desejada:\n");
   printf("0 - Inserir vertice\n");
@@ -307,35 +335,27 @@ int selecionarOpcao()
   printf("4 - Apresentar vertices e relacoes\n");
   printf("5 - Sair\n");
   printf("\n");
-  scanf("%d", &opcaoEscolhida);
+  fgets(opcaoEscolhida, BUFFER_MAX, stdin);
   printf("\n");
-  limparEntrada();
 
-  return opcaoEscolhida;
+  return opcaoEscolhida[0];
 }
 
 char obterIdentificadorVertice()
 {
-  char identificador;
+  char *identificador = (char *)malloc(BUFFER_MAX * sizeof(char *));
   printf("Insira um identificador de 1 caractere para o vertice: ");
-  scanf("%c", &identificador);
-  limparEntrada();
+  fgets(identificador, BUFFER_MAX, stdin);
 
-  return identificador;
+  return identificador[0] >= 33 && identificador[0] <= 126 ? identificador[0] : -1;
 }
 
 double obterPesoAresta()
 {
-  double peso;
+  char *buffer;
+  char *peso = (char *)malloc(BUFFER_MAX * sizeof(char *));
   printf("Insira um peso para a aresta: ");
-  scanf("%lf", &peso);
-  limparEntrada();
+  fgets(peso, BUFFER_MAX, stdin);
 
-  return peso;
-}
-
-void limparEntrada()
-{
-  char entrada;
-  scanf("%c", &entrada);
+  return peso[0] >= 48 && peso[0] <= 57 ? strtod(peso, &buffer) : -1;
 }
