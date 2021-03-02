@@ -254,7 +254,7 @@ void inicializarArestas(struct Vertice *vertice)
 
 int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Aresta **arestas)
 {
-  for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (arestas[i] != NULL && arestas[i]->vertice == verticePesquisado)
       return 1;
@@ -290,6 +290,7 @@ void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVe
   {
     if (primeiroVertice->arestas[i] == NULL)
     {
+      primeiroVertice->arestas[i] = (struct Aresta *)malloc(sizeof(struct Aresta *));
       primeiroVertice->arestas[i] = aresta;
       break;
     }
