@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 
 int const VERTICES_TOTAIS = 6;
 int const ARESTAS_TOTAIS = 9;
@@ -22,9 +24,19 @@ struct Grafo
 
 struct Vertice
 {
-  char identificador;
+  bool jaPercorrido;
+  char *identificador;
   struct Vertice **vertices;
 };
+
+/**
+ * Metodos responsaveis pela obtencao
+ * de todas as combinacoes possiveis
+ * de vertices que resultam em 
+ * ciclos.
+ */
+void mostrarCiclosPorVertice();
+void mostrarCiclos(struct Vertice *, struct Vertice *, char *);
 
 /**
  * Metodos de inicializacao 
@@ -39,10 +51,12 @@ void inserirVerticesEArestas();
  * 'Grafo' (insercao, remocao e
  * leitura).
  */
-void inserirVertice(char);
-void inserirAresta(char, char);
+int existeAresta(struct Vertice *, struct Vertice *);
+int verticeEstaAssociado(struct Vertice *, struct Vertice **);
+void inserirVertice(char *);
+void inserirAresta(char *, char *);
 void mostrarVerticesERelacoes();
-struct Vertice *obterVertice(char);
+struct Vertice *obterVertice(char *);
 
 /**
  * Metodos de funcionalidades auxiliares
@@ -55,6 +69,76 @@ int main(int argc, char const *argv[])
 {
   inicializarComponente();
   inserirVerticesEArestas();
+  mostrarVerticesERelacoes();
+  mostrarCiclosPorVertice();
+}
+
+void mostrarCiclosPorVertice()
+{
+  for (int i = 0; i < VERTICES_TOTAIS; i++)
+  {
+    /**
+     * Percorrera todos os vertices do grafo e,
+     * para cada um, imprimira todos os ciclos
+     * possiveis por meio de mostrarCiclos().
+     */
+    char *ciclo = (char *)malloc(sizeof(char) * VERTICES_TOTAIS);
+    mostrarCiclos(grafo->vertices[i], grafo->vertices[i], strcpy(ciclo, grafo->vertices[i]->identificador));
+  }
+}
+
+void mostrarCiclos(struct Vertice *verticeInicial, struct Vertice *verticeAtual, char *ciclo)
+{
+  /**
+   * Indicara que o vertice atual ja
+   * foi percorrido.
+   */
+  verticeAtual->jaPercorrido = true;
+
+  /**
+   * Percorrera todos os vertices associados
+   * ao atual. 
+   */
+  for (int i = 0; i < VERTICES_TOTAIS; i++)
+  {
+    /**
+     * Interrompe se vertice atual nao possuir
+     * vertices associados.
+     */
+    if (verticeAtual->vertices[i] == NULL)
+      break;
+
+    /**
+     * Prossegue para proximo vertice associado caso
+     * vertice associado atual seja o inicial, porem o ciclo
+     * possua apenas 2 vertices, ou, caso nao seja o inicial,
+     * ja tenha sido percorrido.
+     */
+    if ((verticeAtual->vertices[i] == verticeInicial && strlen(ciclo) <= 2) ||
+        (verticeAtual->vertices[i] != verticeInicial && verticeAtual->vertices[i]->jaPercorrido))
+      continue;
+
+    /**
+     * Caminha ate o proximo vertice associado caso 
+     * nao seja o inicial ou imprime ciclo na tela caso
+     * seja o inicial e ciclo possua mais de 2 vertices.
+     */
+    if (verticeAtual->vertices[i] != verticeInicial)
+    {
+      char *cicloAux = (char *)malloc(sizeof(char) * VERTICES_TOTAIS);
+      strcat(strcpy(cicloAux, ciclo), verticeAtual->vertices[i]->identificador);
+      mostrarCiclos(verticeInicial, verticeAtual->vertices[i], cicloAux);
+    }
+    else if (strlen(ciclo) > 2)
+      printf("%s%s\n", ciclo, verticeAtual->vertices[i]->identificador);
+  }
+
+  /**
+   * Marca vertice como nao percorrido apos
+   * finalizacao da busca em profundidade 
+   * pelos ciclos. 
+   */
+  verticeAtual->jaPercorrido = false;
 }
 
 void inicializarComponente()
@@ -67,26 +151,26 @@ void inicializarComponente()
 
 void inserirVerticesEArestas()
 {
-  inserirVertice('A');
-  inserirVertice('B');
-  inserirVertice('C');
-  inserirVertice('D');
-  inserirVertice('E');
-  inserirVertice('F');
-  inserirAresta('A', 'B');
-  inserirAresta('A', 'D');
-  inserirAresta('A', 'E');
-  inserirAresta('B', 'C');
-  inserirAresta('B', 'D');
-  inserirAresta('B', 'E');
-  inserirAresta('C', 'D');
-  inserirAresta('C', 'E');
-  inserirAresta('C', 'F');
-  inserirAresta('D', 'F');
-  inserirAresta('E', 'F');
+  inserirVertice("A");
+  inserirVertice("B");
+  inserirVertice("C");
+  inserirVertice("D");
+  inserirVertice("E");
+  inserirVertice("F");
+  inserirAresta("A", "B");
+  inserirAresta("A", "D");
+  inserirAresta("A", "E");
+  inserirAresta("B", "C");
+  inserirAresta("B", "D");
+  inserirAresta("B", "E");
+  inserirAresta("C", "D");
+  inserirAresta("C", "E");
+  inserirAresta("C", "F");
+  inserirAresta("D", "F");
+  inserirAresta("E", "F");
 }
 
-void inserirVertice(char identificador)
+void inserirVertice(char *identificador)
 {
   for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
   {
@@ -94,6 +178,7 @@ void inserirVertice(char identificador)
     {
       grafo->vertices[i] = (struct Vertice *)malloc(sizeof(struct Vertice *));
       grafo->vertices[i]->identificador = identificador;
+      grafo->vertices[i]->jaPercorrido = false;
       inicializarVertices(grafo->vertices[i]);
       break;
     }
@@ -107,7 +192,7 @@ void inicializarVertices(struct Vertice *vertice)
     vertice->vertices[i] = NULL;
 }
 
-void inserirAresta(char primeiroIdentificador, char segundoIdentificador)
+void inserirAresta(char *primeiroIdentificador, char *segundoIdentificador)
 {
   struct Vertice *primeiroVertice = obterVertice(primeiroIdentificador);
   struct Vertice *segundoVertice = obterVertice(segundoIdentificador);
@@ -115,7 +200,7 @@ void inserirAresta(char primeiroIdentificador, char segundoIdentificador)
   vincularVertices(segundoVertice, primeiroVertice);
 }
 
-struct Vertice *obterVertice(char identificador)
+struct Vertice *obterVertice(char *identificador)
 {
   struct Vertice *vertice = NULL;
   for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
@@ -137,13 +222,32 @@ void vincularVertices(struct Vertice *primeiroVertice, struct Vertice *segundoVe
   }
 }
 
+int existeAresta(struct Vertice *primeiroVertice, struct Vertice *segundoVertice)
+{
+  if (primeiroVertice->vertices == NULL || segundoVertice->vertices == NULL)
+    return 0;
+
+  return verticeEstaAssociado(segundoVertice, primeiroVertice->vertices);
+}
+
+int verticeEstaAssociado(struct Vertice *verticePesquisado, struct Vertice **verticesAssociados)
+{
+  for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
+  {
+    if (verticesAssociados[i] == verticePesquisado)
+      return 1;
+  }
+
+  return 0;
+}
+
 void mostrarVerticesERelacoes()
 {
   for (int i = VERTICE_INICIAL; i < VERTICES_TOTAIS; i++)
   {
     if (grafo->vertices[i] != NULL)
     {
-      printf("%c possui relacao com: ", grafo->vertices[i]->identificador);
+      printf("%s possui relacao com: ", grafo->vertices[i]->identificador);
       mostrarRelacoes(grafo->vertices[i]);
     }
     else
@@ -158,7 +262,7 @@ void mostrarRelacoes(struct Vertice *vertice)
   for (int i = ARESTA_INICIAL; i < ((int)ARESTAS_TOTAIS); i++)
   {
     if (relacoes[i] != NULL)
-      printf("%c ", relacoes[i]->identificador);
+      printf("%s ", relacoes[i]->identificador);
     else
       break;
   }
